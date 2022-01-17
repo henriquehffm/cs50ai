@@ -93,7 +93,36 @@ def shortest_path(source, target):
     """
 
     # TODO
-    raise NotImplementedError
+    solution = False
+    if source == target:
+        solution = True
+    start = Node(source, None, None)
+    frontier = QueueFrontier()
+    frontier.add(start)
+    explored_act = set()
+
+    while solution == False:
+        if frontier.empty():
+            raise Exception("no solution")
+        step = frontier.remove()
+        neighbors = neighbors_for_person(step.state)
+        for mov, act in neighbors:
+            if act not in explored_act and act != source:
+                child = Node(act, step, mov)
+                frontier.add(child)
+                if child.state == target:
+                    step = child
+                    solution = True
+                    break
+
+        explored_act.add(step.state)
+
+    path = []
+    while step.parent is not None:
+        path.append((step.action, step.state))
+        step = step.parent
+    path.reverse()
+    return path
 
 
 def person_id_for_name(name):
