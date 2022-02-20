@@ -234,11 +234,11 @@ class MinesweeperAI():
         This function may use the knowledge in self.mines, self.safes
         and self.moves_made, but should not modify any of those values.
         """
-        safe_move = ()
+        safe_move = []]
         for cell in self.known_safes:
             if cell not in self.moves_made:
-                safe_move.add(cell)
-        if len(safemove) > 0:
+                safe_move.append(cell)
+        if len(safe_move) > 0:
             return random.choice(safe_move)
         else:
             return None
@@ -250,11 +250,11 @@ class MinesweeperAI():
             1) have not already been chosen, and
             2) are not known to be mines
         """
-        random_move = ()
+        random_move = []]
         for i in range(0, self.height):
             for j in range(0, self.width):
                 if (i, j) not in self.moves_made and (i, j) not in self.known_mines:
-                    random_move.add((i, j))
+                    random_move.append((i, j))
         if len(random_move) > 0:
             return random.choice(random_move)
         else:
