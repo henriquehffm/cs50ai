@@ -112,12 +112,16 @@ class Sentence():
         return None
 
     def mark_mine(self, cell):
-        self.cells.remove(cell)
-        self.count =- 1
+        if cell in self.cells:
+            self.cells.remove(cell)
+            self.count =- 1
+            return 1
         return 0
 
     def mark_safe(self, cell):
-        self.cells.remove(cell)
+        if cell in self.cells:
+            self.cells.remove(cell)
+            return 1
         return 0
 
 class MinesweeperAI():
@@ -181,12 +185,12 @@ class MinesweeperAI():
         y = cell[1]
         for i in range(x-1, x+2):
             if i >= 0 and i < self.height:
-            for j in range(y-1, x+2):
-                if j >= 0 and and j < self.width and (i, j) != (x, y):
-                    if (i, j) in self.mines:
-                        count =- 1
-                    elif (i, j) not in self.safes:
-                        cells_around.add((i, j))
+                for j in range(y-1, y+2):
+                    if j >= 0 and j < self.width and (i, j) != (x, y):
+                        if (i, j) in self.mines:
+                            count =- 1
+                        elif (i, j) not in self.safes:
+                            cells_around.add((i, j))
 
         if count == 0:
             for i, j in cells_around:
@@ -195,7 +199,7 @@ class MinesweeperAI():
             for i, j in cells_around:
                 self.mark_mine((i,j))
         else:
-            sentence play(cells_around, count)
+            play = Sentence(cells_around, count)
             self.knowledge.append(play)
             for memory in self.knowledge:
                 if len(play.cells) > 0 and memory != play:
@@ -234,8 +238,8 @@ class MinesweeperAI():
         This function may use the knowledge in self.mines, self.safes
         and self.moves_made, but should not modify any of those values.
         """
-        safe_move = []]
-        for cell in self.known_safes:
+        safe_move = []
+        for cell in self.safes:
             if cell not in self.moves_made:
                 safe_move.append(cell)
         if len(safe_move) > 0:
@@ -250,10 +254,10 @@ class MinesweeperAI():
             1) have not already been chosen, and
             2) are not known to be mines
         """
-        random_move = []]
+        random_move = []
         for i in range(0, self.height):
             for j in range(0, self.width):
-                if (i, j) not in self.moves_made and (i, j) not in self.known_mines:
+                if (i, j) not in self.moves_made and (i, j) not in self.mines:
                     random_move.append((i, j))
         if len(random_move) > 0:
             return random.choice(random_move)
