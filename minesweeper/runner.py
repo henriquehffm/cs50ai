@@ -1,6 +1,7 @@
 import pygame
 import sys
 import time
+from copy import deepcopy
 
 from minesweeper import Minesweeper, MinesweeperAI
 

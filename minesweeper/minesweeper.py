@@ -1,6 +1,6 @@
 import itertools
 import random
-
+from copy import deepcopy
 
 class Minesweeper():
     """
@@ -104,17 +104,19 @@ class Sentence():
     def known_mines(self):
         if self.count == len(self.cells):
             return self.cells
-        return None
+        else:
+            return set()
 
     def known_safes(self):
         if self.count == 0:
             return self.cells
-        return None
+        else:
+            return set()
 
     def mark_mine(self, cell):
         if cell in self.cells:
             self.cells.remove(cell)
-            self.count =- 1
+            self.count -= 1
             return 1
         return 0
 
@@ -188,45 +190,53 @@ class MinesweeperAI():
                 for j in range(y-1, y+2):
                     if j >= 0 and j < self.width and (i, j) != (x, y):
                         if (i, j) in self.mines:
-                            count =- 1
+                            count -= 1
                         elif (i, j) not in self.safes:
                             cells_around.add((i, j))
-
         if count == 0:
-            for i, j in cells_around:
-                self.mark_safe((i,j))
+            for mov in cells_around:
+                self.mark_safe(mov)
         elif len(cells_around) == count:
-            for i, j in cells_around:
-                self.mark_mine((i,j))
+            for mov in cells_around:
+                self.mark_mine(mov)
         else:
             play = Sentence(cells_around, count)
-            self.knowledge.append(play)
             for memory in self.knowledge:
-                if len(play.cells) > 0 and memory != play:
-                    intersec = memory.cells.intersection(play.cells)
-                    if len(intersec) == len(play.cells):
-                        memory.cells.remove(intersec)
-                        memory.count =- play.count
-                        if memory.known_safes:
-                            for cell in memory.cells:
-                                self.mark_safe(cell)
-                            self.knowledge.remove(memory)
-                        if memory.known_mines:
-                            for cell in memory.cells:
-                                self.mark_mine(cell)
-                            self.knowledge.remove(memory)
+                if len(play.cells) > 0:
+                    if play.cells.issubset(memory.cells):
+                        for mov in play.cells:
+                            memory.cells.remove(mov)
+                        memory.count -= play.count
+                        if memory.count == 0:
+                            it_cell = deepcopy(memory.cells)
+                            for mov in it_cell:
+                                self.mark_safe(mov)
+                        if memory.count == len(memory.cells):
+                            it_cell = deepcopy(memory.cells)
+                            for mov in it_cell:
+                                self.mark_mine(mov)
+                    elif memory.cells.issubset(play.cells):
+                        for mov in memory.cells:
+                            play.cells.remove(mov)
+                        play.count -= memory.count
+                        if play.count == 0:
+                            it_cell = deepcopy(play.cells)
+                            for mov in it_cell:
+                                self.mark_safe(mov)
+                        elif play.count == len(play.cells):
+                            it_cell = deepcopy(play.cells)
+                            for mov in it_cell:
+                                self.mark_mine(mov)
+                if len(memory.cells) == 0:
+                    self.knowledge.remove(memory)
+            self.knowledge.append(play)
 
-                    elif len(intersec) == len(memory.cells):
-                        play.cells.remove(intersec)
-                        play.count =- memory.count
-                        if play.known_safes:
-                            for cell in play.cells:
-                                self.mark_safe(cell)
-                            self.knowledge.remove(play)
-                        elif play.known_mines:
-                            for cell in play.cells:
-                                self.mark_mine(cell)
-                            self.knowledge.remove(play)
+            for memory in self.knowledge:
+                for mov in memory.known_safes().copy():
+                    self.mark_safe(mov)
+                for mov in memory.known_mines().copy():
+                    self.mark_mine(mov)
+
         return 0
 
     def make_safe_move(self):
