@@ -63,13 +63,14 @@ def transition_model(corpus, page, damping_factor):
     if links == 0:
         for name in corpus:
             prob = 1/n
-            dist = {name : prob}
+            dist[name] = prob
     else:
         for name in corpus.keys():
             if name in corpus[page]:
                 prob = (1 - damping_factor) / n + damping_factor / links
-                dist = {name : prob}
-
+            else:
+                prob = (1 - damping_factor) / n
+            dist[name] = prob
     return dist
 
 
@@ -82,13 +83,14 @@ def sample_pagerank(corpus, damping_factor, n):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    startpage = random.choice(corpus.keys())
+    startpage = random.choice(list(corpus.keys()))
     pgrank = {}
     for name in corpus.keys():
         pgrank[name] = 0
     for n in range(0, n):
         prob = transition_model(corpus, startpage, damping_factor)
-        startpage = random.choices(prob.keys(), prob.values())
+        nextpage = random.choices(list(prob.keys()), list(prob.values()), k=1)
+        startpage = nextpage[0]
         pgrank[startpage] += 1
     for sample in pgrank.keys():
         pgrank[sample] /= n
@@ -110,6 +112,8 @@ def iterate_pagerank(corpus, damping_factor):
     to = corpus
     inp = {}
     for name in to.keys():
+        inp[name] = set()
+    for name in to.keys():
         pgrank[name] = 1 / size
     for file in to.keys():
         """if there's no link in page, set all the links"""
@@ -120,18 +124,26 @@ def iterate_pagerank(corpus, damping_factor):
         """creates dictionary with information of links that direct to a page"""
         for link in to[file]:
             inp[link].add(file)
-    startpage = random.choices(pgrank.keys(), pgrank.values())
+    startpage = random.choice(list(corpus.keys()))
+    nextpage = startpage
     max_diff = 1
+    diff = {}
+    new_pgrank = {}
+    for file in to.keys():
+        diff[file] = 1
     while max_diff > 0.001:
+        #for startpage in corpus.keys():
         sum_pr = 0
-        size_page = len(to[startpage])
         for link in inp[startpage]:
-            sum_pr += pgrank[link]
-        new_pgrank = (1 - damping_factor) / size + damping_factor * sum_pr / size_page
-        max_diff = abs(new_pgrank - pgrank[startpage])
-        pgrank[startpage] = new_pgrank
-        startpage = random.choices(pgrank.keys(), pgrank.values())
-
+            sum_pr += pgrank[link] / len(to[link])
+        new_pgrank[startpage] = ((1 - damping_factor) / size) + (damping_factor * sum_pr)
+        diff[startpage] = abs(new_pgrank[startpage] - pgrank[startpage])
+        pgrank[startpage] = new_pgrank[startpage]
+        max_diff = max(list(diff.values()))
+        while nextpage == startpage:
+            getpage = random.choices(list(pgrank.keys()), list(pgrank.values()), k=1)
+            nextpage = getpage[0]
+        startpage = nextpage
     return pgrank
 
 
